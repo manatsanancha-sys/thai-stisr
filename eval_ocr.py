@@ -17,6 +17,7 @@ from the HR image (so OCR mistakes that have nothing to do with blur are exclude
 Usage:
   python eval_ocr.py --data data --split test --out results/baseline
   python eval_ocr.py --data data --split test --extra tsrn=out/tsrn --out results/tsrn
+  python eval_ocr.py --data data --split test --crop --out results/baseline_crop
 """
 import argparse
 import csv
@@ -82,6 +83,22 @@ def clean(text):
     return "".join(text.split())
 
 
+def crop_to_ink(img, margin=6):
+    """Cut the white border around the word, using only the image itself (no ground truth).
+
+    Applied identically to every condition, so it cannot favour one of them. It avoids
+    OCR "ghost" characters that appear in the empty left/right margin of blurry images.
+    """
+    _, bw = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
+    ys, xs = np.where(bw > 0)
+    if len(xs) == 0:
+        return img
+    h, w = img.shape[:2]
+    y0, y1 = max(ys.min() - margin, 0), min(ys.max() + 1 + margin, h)
+    x0, x1 = max(xs.min() - margin, 0), min(xs.max() + 1 + margin, w)
+    return img[y0:y1, x0:x1]
+
+
 def make_reader(backend):
     if backend == "easyocr":
         import easyocr
@@ -120,6 +137,8 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="only the first N words (0 = all)")
     ap.add_argument("--extra", action="append", default=[],
                     help="name=dir with restored images <id>.png (e.g. TSRN output)")
+    ap.add_argument("--crop", action="store_true",
+                    help="crop the white border around the word before OCR (same for all inputs)")
     ap.add_argument("--out", default="results/baseline")
     args = ap.parse_args()
 
@@ -143,7 +162,7 @@ def main():
             imgs[name] = cv2.imread(os.path.join(folder, f"{r['id']}.png"), 0)
         row = {"id": r["id"], "text": gt, "has_upper": int(r["has_upper"]), "has_lower": int(r["has_lower"])}
         for c in conditions:
-            pred = read(imgs[c])
+            pred = read(crop_to_ink(imgs[c]) if args.crop else imgs[c])
             s, d, i, me, mt, ce, ct = align_errors(gt, pred)
             row.update({f"{c}_pred": pred, f"{c}_ok": int(pred == gt), f"{c}_S": s, f"{c}_D": d,
                         f"{c}_I": i, f"{c}_mark_err": me, f"{c}_mark_total": mt,
