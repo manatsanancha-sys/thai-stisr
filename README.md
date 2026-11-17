@@ -14,6 +14,18 @@ python make_dataset.py --n 3000 --scale 4 --out data
 python preview.py data 8 train      # writes preview.png
 ```
 
+## Fonts
+Fonts are not included in this repo and must be downloaded into `fonts/`.
+They are Sarabun and Noto Sans Thai, both under the SIL Open Font License (OFL),
+from the [google/fonts](https://github.com/google/fonts) repo:
+```bash
+mkdir -p fonts
+B=https://raw.githubusercontent.com/google/fonts/main/ofl
+curl -L -o fonts/Sarabun-Regular.ttf $B/sarabun/Sarabun-Regular.ttf
+curl -L -o fonts/Sarabun-Medium.ttf  $B/sarabun/Sarabun-Medium.ttf
+curl -L -o fonts/NotoSansThai.ttf   "$B/notosansthai/NotoSansThai%5Bwdth,wght%5D.ttf"
+```
+
 ## Data
 - Words from PyThaiNLP, stratified: upper-mark / lower-mark / both / plain.
 - HR 64x256 rendered with open fonts; LR = blur -> downscale -> noise -> JPEG.
