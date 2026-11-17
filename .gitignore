@@ -3,3 +3,6 @@ data_test/
 fonts/
 venv/
 __pycache__/
+results/**
+!results/**/
+!results/**/summary.md
