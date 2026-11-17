@@ -40,6 +40,8 @@ python train_sr.py --name tsrn_plain
 python train_sr.py --name tsrn_zoneloss --w-up 5 --w-lo 5
 ```
 TSRN-lite (no STN, GRU, grayscale); outputs go to runs/<name>/sr_test and are scored with eval_ocr.py --extra.
+The network predicts a residual on top of the bicubic upscale; an earlier
+version with a sigmoid output collapsed to an all-white image.
 
 ## Evaluation
 `eval_ocr.py` runs EasyOCR (Thai) on each test word and compares the result
