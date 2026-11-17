@@ -5,8 +5,8 @@
 Goal: test whether a 3-zone mask (upper / middle / lower, from Unicode) helps
 Thai scene-text super-resolution + OCR, on top of a TSRN baseline.
 
-**Status:** proposal + synthetic data pipeline done. Model training and OCR
-evaluation are in progress — no results claimed yet.
+**Status:** proposal, synthetic data pipeline and OCR baseline done (see
+Baseline below). TSRN training and the 3-zone mask are in progress.
 
 ## Quick start
 ```bash
