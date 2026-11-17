@@ -1,5 +1,7 @@
 # Thai STISR — vowel/tone-aware masking (work in progress)
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/manatsanancha-sys/thai-stisr/blob/main/colab_generate.ipynb)
+
 Goal: test whether a 3-zone mask (upper / middle / lower, from Unicode) helps
 Thai scene-text super-resolution + OCR, on top of a TSRN baseline.
 
