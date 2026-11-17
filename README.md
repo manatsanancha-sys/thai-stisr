@@ -62,14 +62,16 @@ Results are reported for all words, for words the OCR reads correctly from HR
 upper marks. Output goes to `--out`: `per_sample.csv`, `summary.json` and
 `summary.md`. Only `summary.md` is tracked in git.
 
-## Baseline: how blur hurts Thai OCR (synthetic test set, n=302, EasyOCR)
-Evaluated on words EasyOCR reads correctly from the HR image (n=230):
+## Baseline: how blur hurts Thai OCR (synthetic test set, n=302, EasyOCR, --crop)
+Evaluated on words EasyOCR reads correctly from the HR image (n=280):
 
 | input | word acc | CER | mark err | consonant err |
 |---|---|---|---|---|
 | HR | 100.0% | 0.0% | 0.0% | 0.0% |
-| LR x4, bicubic | 66.5% | 9.3% | 11.3% | 8.9% |
+| LR x4, bicubic | 76.1% | 6.8% | 12.1% | 5.5% |
+| LR x2, bicubic | 97.5% | 0.4% | 0.7% | 0.4% |
 
-Single run, one OCR engine, synthetic data: indicative only, not a general result.
-Blur hurts consonants almost as much as vowel/tone marks, so a mark-aware
-method can only fix part of the errors. Next: TSRN baseline and 3-zone mask.
+At x2 almost nothing is lost, so x4 is the main setting. At x4, vowel/tone marks
+are lost about twice as often per character as other characters. All numbers use
+--crop (white border removed before OCR); without it EasyOCR adds ghost characters.
+Single run, one OCR engine, synthetic data: indicative only.
