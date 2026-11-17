@@ -1,0 +1,5 @@
+data/
+data_test/
+fonts/
+venv/
+__pycache__/
