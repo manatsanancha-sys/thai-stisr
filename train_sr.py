@@ -93,12 +93,22 @@ class TSRNLite(nn.Module):
         up = []
         for _ in range(int(np.log2(scale))):
             up += [nn.Conv2d(c, c * 4, 3, padding=1), nn.PixelShuffle(2), nn.PReLU()]
-        self.up = nn.Sequential(*up, nn.Conv2d(c, 1, 9, padding=4))
+        self.out = nn.Conv2d(c, 1, 9, padding=4)
+        nn.init.zeros_(self.out.weight)       # start exactly at the bicubic result
+        nn.init.zeros_(self.out.bias)
+        self.up = nn.Sequential(*up, self.out)
+        self.scale = scale
 
     def forward(self, x):
+        """Predicts a correction on top of the bicubic upscale of the LR channel.
+
+        (A first version used a plain sigmoid output; it collapsed to an all-white image
+        because the text covers only ~14% of the pixels. Learning a residual avoids that.)
+        """
+        base = F.interpolate(x[:, :1], scale_factor=self.scale, mode="bicubic", align_corners=False)
         h = self.head(x)
         y = self.mid(self.srbs(h)) + h        # global skip, as in TSRN
-        return torch.sigmoid(self.up(y))
+        return base + self.up(y)              # NOT clamped here; clamp when scoring / saving
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -126,7 +136,7 @@ def evaluate(model, loader, dev, args):
     ps, pb = [], []
     for lr, hr, m, _ in loader:
         lr, hr, m = lr.to(dev), hr.to(dev), m.to(dev)
-        sr = model(make_input(lr, m, args.mask_in, args.scale))
+        sr = model(make_input(lr, m, args.mask_in, args.scale)).clamp(0, 1)
         ps.append(psnr(sr, hr).cpu())
         pb.append(psnr(F.interpolate(lr, scale_factor=args.scale, mode="bicubic").clamp(0, 1), hr).cpu())
     return torch.cat(ps).mean().item(), torch.cat(pb).mean().item()
@@ -137,7 +147,7 @@ def dump(model, ds, dev, args, out_dir):
     model.eval()
     os.makedirs(out_dir, exist_ok=True)
     for lr, _, m, sid in DataLoader(ds, batch_size=args.bs):
-        sr = model(make_input(lr.to(dev), m.to(dev), args.mask_in, args.scale)).cpu()
+        sr = model(make_input(lr.to(dev), m.to(dev), args.mask_in, args.scale)).clamp(0, 1).cpu()
         for img, s in zip(sr, sid):
             cv2.imwrite(os.path.join(out_dir, f"{s}.png"), (img[0].numpy() * 255).round().astype(np.uint8))
 
@@ -187,6 +197,7 @@ def main():
             loss = (w * (sr - hr).abs()).mean() / w.mean()     # zone-weighted L1, normalised
             opt.zero_grad()
             loss.backward()
+            nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
             tot += loss.item() * len(lr)
         sched.step()
