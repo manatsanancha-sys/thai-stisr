@@ -33,3 +33,27 @@ curl -L -o fonts/NotoSansThai.ttf   "$B/notosansthai/NotoSansThai%5Bwdth,wght%5D
 - HR 64x256 rendered with open fonts; LR = blur -> downscale -> noise -> JPEG.
 - Reference 3-zone mask comes from render differences (no hand labels).
 - Splits are by word (hash), so no word appears in two splits.
+
+## Evaluation
+`eval_ocr.py` runs EasyOCR (Thai) on each test word and compares the result
+with the ground-truth text:
+```bash
+python eval_ocr.py --data data --split test --out results/baseline
+```
+It scores the HR image (upper bound) and the bicubic-upscaled LR image
+(no-SR baseline). To score restored images such as TSRN output, add
+`--extra tsrn=out/tsrn`. Use `--limit N` for a quick run on the first N words.
+
+Metrics are micro-averaged over words:
+- **word acc**: share of words read exactly right.
+- **CER**: character error rate, edit distance / ground-truth length.
+- **mark err**: errors on upper/lower vowels and tone marks: marks that were
+  dropped or substituted, plus marks the OCR added, divided by the number of
+  ground-truth marks.
+- **consonant err**: the same count for all other characters (consonants,
+  leading vowels, ...).
+
+Results are reported for all words, for words the OCR reads correctly from HR
+(so errors that have nothing to do with blur are left out), and for words with
+upper marks. Output goes to `--out`: `per_sample.csv`, `summary.json` and
+`summary.md`. Only `summary.md` is tracked in git.
