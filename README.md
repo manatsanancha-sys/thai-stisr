@@ -34,6 +34,13 @@ curl -L -o fonts/NotoSansThai.ttf   "$B/notosansthai/NotoSansThai%5Bwdth,wght%5D
 - Reference 3-zone mask comes from render differences (no hand labels).
 - Splits are by word (hash), so no word appears in two splits.
 
+## Training
+```bash
+python train_sr.py --name tsrn_plain
+python train_sr.py --name tsrn_zoneloss --w-up 5 --w-lo 5
+```
+TSRN-lite (no STN, GRU, grayscale); outputs go to runs/<name>/sr_test and are scored with eval_ocr.py --extra.
+
 ## Evaluation
 `eval_ocr.py` runs EasyOCR (Thai) on each test word and compares the result
 with the ground-truth text:
