@@ -43,6 +43,10 @@ python eval_ocr.py --data data --split test --out results/baseline
 It scores the HR image (upper bound) and the bicubic-upscaled LR image
 (no-SR baseline). To score restored images such as TSRN output, add
 `--extra tsrn=out/tsrn`. Use `--limit N` for a quick run on the first N words.
+```bash
+python eval_ocr.py --data data --split test --crop --out results/baseline_crop
+```
+--crop removes the white border around the word before OCR, applied the same way to every input.
 
 Metrics are micro-averaged over words:
 - **word acc**: share of words read exactly right.
