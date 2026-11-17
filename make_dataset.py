@@ -26,7 +26,7 @@ import re
 
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, features
 from pythainlp.corpus import thai_words
 
 UPPER = {0x0E31, *range(0x0E34, 0x0E38), *range(0x0E47, 0x0E4F)}
@@ -44,7 +44,18 @@ def strip(word, zone):
     return "".join(c for c in word if ord(c) not in zone)
 
 
+def check_raqm():
+    """Thai marks need complex text layout; without Raqm Pillow falls back to basic
+    layout and tone marks collide with upper vowels and tall consonants."""
+    if not features.check_feature("raqm"):
+        raise SystemExit(
+            "Pillow has no Raqm support (libraqm + FriBiDi + HarfBuzz), so Thai marks "
+            "would be placed wrong. Run on Linux/WSL, where Pillow wheels include Raqm, "
+            "or install FriBiDi so Pillow can load Raqm.")
+
+
 def load_fonts(font_dir):
+    check_raqm()
     fonts = []
     for path in sorted(glob.glob(os.path.join(font_dir, "*.ttf"))):
         try:
